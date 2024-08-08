@@ -1,6 +1,6 @@
 # EVN Kundenschnittstelle auslesen (SMART METER)
 Original description:
-https://github.com/supagusti/SmartMeter-Kundenschnittstelle-auslesen/blob/main/README.md
+https://github.com/all4electronics/SmartMeter-Kundenschnittstelle-auslesen/blob/main/README.md
 
 <h2>Installation</h2>
 
