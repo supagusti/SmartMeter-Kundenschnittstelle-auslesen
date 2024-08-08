@@ -6,6 +6,8 @@ https://github.com/supagusti/SmartMeter-Kundenschnittstelle-auslesen/blob/main/R
 
 Einfach mit der Arudino IDE das angehängte Projet öffnen und die WLAN Einstellungen, die IP des MQTT Brokers und den Crypto-Key (kann man bei der EVN anfordern) ändern und auf den ESP32 hochladen. Meine IDE Einstellungen waren wie folgt:
 
+![alt text](https://github.com/supagusti/SmartMeter-Kundenschnittstelle-auslesen/blob/main/ESP32-Einstellungen%20Arduino%20IDE.png)
+
 <h2>Schaltung:</h2>
 
 ![alt text](https://github.com/supagusti/SmartMeter-Kundenschnittstelle-auslesen/blob/main/Schaltung_2024-08-08.JPG)
