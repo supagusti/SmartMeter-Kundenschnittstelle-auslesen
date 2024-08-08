@@ -2,4 +2,4 @@
 Original description:
 https://github.com/supagusti/SmartMeter-Kundenschnittstelle-auslesen/blob/main/README.md
 
-https://github.com/supagusti/SmartMeter-Kundenschnittstelle-auslesen/blob/main/fertiges_Projekt.jpg
+![alt text](https://github.com/supagusti/SmartMeter-Kundenschnittstelle-auslesen/blob/main/fertiges_Projekt.jpg)
