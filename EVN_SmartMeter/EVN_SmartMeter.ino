@@ -55,6 +55,7 @@ struct IncommingData {
 };
 
 IncommingData aktuelleDaten;
+// You have to use your own decryption key from your elecricity provider (EVN)
 
 Vector_GCM datenMbus = {   //static
   .name        = "AES-128 GCM",
