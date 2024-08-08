@@ -1,8 +1,8 @@
 // Programm zur Auslesung und Entschlüsselung der Kundenschnittstelle eines SmartMeters der EVN (NÖ)
 // Bibliothek: https://github.com/rweather/arduinolibs/tree/master/libraries/Crypto
 // Aus dem Ordner "libraries" die Bibliothek "Crypto" installieren!
-// Originalcode:
-// https://github.com/all4electronics/SmartMeter-Kundenschnittstelle-auslesen/blob/main/EVN_SmartMeter/EVN_SmartMeter.ino
+// Prg. funktioniert für einen Atmega2560 (Arduino Mega), Man könnte aber auch die Bibliothek SoftwareSerial benutzen um 
+// das Programm auf einem anderen Mikrocontroller zu realisieren.
 
 #include <Crypto.h>
 #include <AES.h>
@@ -12,20 +12,20 @@
 #include <PubSubClient.h>
 
 
+#define MAX_PLAINTEXT_LEN 300
+
 // Replace the next variables with your SSID/Password combination
-const char* ssid = "<ENTER YOUR SSID>";
-const char* password = "<ENTER YOUR PASSWORD>";
+const char* ssid = "MitschkeWlan";
+const char* password = "AAA1BBB2CCC3EEE4FFF5000678";
 
 // Add your MQTT Broker IP address, example:
-const char* mqtt_server = "<IP ADDRESS OF MQTT-BROKER>";
-
-#define MAX_PLAINTEXT_LEN 300
-#define RX1 16
-#define TX1 17
+const char* mqtt_server = "192.168.0.150";
 
 WiFiClient espClient;
 PubSubClient client(espClient);
 
+#define RX1 16
+#define TX1 17
 const int ledPin =LED_BUILTIN;
 bool readyToSend=true;
 
@@ -55,7 +55,6 @@ struct IncommingData {
 };
 
 IncommingData aktuelleDaten;
-// You have to use your own decryption key from your elecricity provider (EVN)
 
 Vector_GCM datenMbus = {   //static
   .name        = "AES-128 GCM",
@@ -71,6 +70,8 @@ Vector_GCM datenMbus = {   //static
   .iv          = {},
   .tag         = {},  
 };
+
+bool firstOne=true;
 
 void setup() {
   for (int i = 0; i < MAX_PLAINTEXT_LEN; i++) {
@@ -171,6 +172,16 @@ void loop() {
   }
   if (millis() > timeSinceLastData + 3000) {                // Sind mehr als 3 Sekunden vergangen-> Daten entschlüsseln
     if (processData) {
+      /*
+      //-------------------------------
+      Serial.println("Daten vom Smart Meter: ");          // Ausgabe der eingelesenen Rohdaten(verschlüsselt)
+      for (int i = 0; i < MAX_PLAINTEXT_LEN; i++) {   //
+        if (datenMbus.ciphertext[i] < 0x10)Serial.print("0");
+        Serial.print(datenMbus.ciphertext[i], HEX);
+      }
+      Serial.println("");
+      //--------------------------------
+      */
 
       digitalWrite(ledPin, HIGH);
       
@@ -188,7 +199,19 @@ void loop() {
       datenMbus.ciphertext[i]=0x00;
       }
       decrypt_text(datenMbus);
-
+      /*
+      Serial.print("Iv: ");
+      for (int i = 0; i < 12; i++) {
+        if (datenMbus.iv[i] < 0x10)Serial.print("0");
+        Serial.print(datenMbus.iv[i], HEX);
+      }
+      Serial.println();
+      Serial.println("Entschluesselte Daten: ");
+      for (unsigned int i = 0; i < datenMbus.datasize; i++) {
+        if (datenMbus.plaintext[i] < 16)Serial.print("0");
+        Serial.print(datenMbus.plaintext[i], HEX);
+      }
+      Serial.println(" ");*/
       aktuelleDaten.year = ((datenMbus.plaintext[6] << 8) | datenMbus.plaintext[7]) - 2000;
       aktuelleDaten.month = datenMbus.plaintext[8];
       aktuelleDaten.day = datenMbus.plaintext[9];
@@ -207,6 +230,17 @@ void loop() {
       aktuelleDaten.iL3=float((datenMbus.plaintext[204]<<8)|datenMbus.plaintext[205])/100.0;
       aktuelleDaten.powerF=float((datenMbus.plaintext[221]<<8)|datenMbus.plaintext[222])/1000.0;
       Serial.println("---------------------------------------------------------------------------");
+      //Serial.print(aktuelleDaten.day);
+      //Serial.print(".");
+      //Serial.print(aktuelleDaten.month);
+      //Serial.print(".");
+      //Serial.print(aktuelleDaten.year);
+      //Serial.print("  ");
+      //Serial.print(aktuelleDaten.hour);
+      //Serial.print(":");
+      //Serial.print(aktuelleDaten.minutes);
+      //Serial.print(":");
+      //Serial.println(aktuelleDaten.seconds);
       Serial.print("A+: ");
       Serial.print(aktuelleDaten.wirkenergiePlus);
       Serial.print("Wh | A-: ");
@@ -227,9 +261,20 @@ void loop() {
       Serial.println(aktuelleDaten.powerF);
       Serial.println("");
 
+      if (!firstOne) 
+      {
       //-----------------------------------------------------------------------
       //MQTT START
       //-----------------------------------------------------------------------
+      
+       //String wirkenergiePlusString = String(aktuelleDaten.wirkenergiePlus);
+       //Serial.print("wirkenergiePlusString: ");
+       //Serial.println(wirkenergiePlusString);
+       //char const *wirkenergiePlus = wirkenergiePlusString.c_str();
+       //Serial.print("wirkenergiePlus: ");
+       //Serial.println(wirkenergiePlus);
+       //client.publish("Smartmeter10/WirkenergieP",wirkenergiePlus);
+       //client.publish("Smartmeter10/WirkenergieP","wirkenergiePlus");
        String Zeitstempel;
        String year, month, day, hour, minutes, seconds;
        year="20"+String (aktuelleDaten.year);
@@ -245,6 +290,7 @@ void loop() {
        if (minutes.length() < 2) {minutes="0"+minutes;}
        if (seconds.length() < 2) {seconds="0"+seconds;}
        Zeitstempel = String (year)+"-"+String (month)+"-"+String(day)+" "+String(hour)+":"+String(minutes)+":"+String(seconds);
+       //Zeitstempel = String (aktuelleDaten.year)+"-"+String (aktuelleDaten.month)+"-"+String(aktuelleDaten.day)+" "+String(aktuelleDaten.hour)+":"+String(aktuelleDaten.minutes)+":"+String(aktuelleDaten.seconds);
        Serial.print ("Zeitstempel: ");
        Serial.println(Zeitstempel);
       
@@ -261,10 +307,16 @@ void loop() {
        client.publish("Smartmeter10/StromL3",(String(aktuelleDaten.iL3)).c_str() );
        client.publish("Smartmeter10/Leistungsfaktor",(String(aktuelleDaten.powerF)).c_str() );
        client.publish("Smartmeter10/Zeitstempel",(String(Zeitstempel)).c_str() );
+       
 
       //-----------------------------------------------------------------------
       //MQTT END
       //-----------------------------------------------------------------------
+      }
+      else
+      {
+       firstOne=false;  
+      }
       
       for (int i = 0; i < MAX_PLAINTEXT_LEN; i++) {
         datenMbus.plaintext[i] = 0x00;
